@@ -11,14 +11,12 @@ public class Main {
     public static boolean releaseHydro = false;
     public static String string = "";
     public static Lock lock = new ReentrantLock();
+    public static ExecutorService executor = Executors.newFixedThreadPool(10);
 
     public static void main(String[] args) {
 
-        ExecutorService executor1 = Executors.newFixedThreadPool(10);
-        ExecutorService executor2 = Executors.newFixedThreadPool(10);
-
         for (int i = 0; i < 1000; i++) {
-            executor1.execute(() -> {
+            executor.execute(() -> {
                 lock.lock();
                 if (oxygenReceiver < 1) {
                     oxygenReceiver++;
@@ -30,12 +28,13 @@ public class Main {
                 lock.unlock();
             });
 
-            executor2.execute(() -> {
+            executor.execute(() -> {
                 lock.lock();
-                if (hydrogenReceiver < 2) {
+                if (hydrogenReceiver < 1) {
+                    releaseHydrogen();
                     hydrogenReceiver++;
                 }
-                else if (hydrogenReceiver == 2 && !releaseHydro) {
+                else if (hydrogenReceiver == 1 && !releaseHydro) {
                     releaseHydro = true;
                     releaseHydrogen();
                 }
@@ -43,12 +42,11 @@ public class Main {
             });
         }
 
-        executor1.shutdown();
-        executor2.shutdown();
+        executor.shutdown();
     }
 
     public static void releaseHydrogen(){
-        pshhhh("HH");
+        pshhhh("H");
     }
 
     public static void releaseOxygen(){
