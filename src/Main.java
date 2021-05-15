@@ -1,15 +1,14 @@
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Main {
-    public static AtomicInteger hydrogenReceiver = new AtomicInteger(0);
-    public static AtomicInteger oxygenReceiver = new AtomicInteger(0);
-    public static AtomicBoolean releaseOxy = new AtomicBoolean(false);
-    public static AtomicBoolean releaseHydro = new AtomicBoolean(false);
+    public static int hydrogenReceiver = 0;
+    public static int oxygenReceiver = 0;
+    public static int counter = 0;
+    public static boolean releaseOxy = false;
+    public static boolean releaseHydro = false;
     public static String string = "";
     public static Lock lock = new ReentrantLock();
 
@@ -21,11 +20,11 @@ public class Main {
         for (int i = 0; i < 1000; i++) {
             executor1.execute(() -> {
                 lock.lock();
-                if (oxygenReceiver.get() < 1) {
-                    oxygenReceiver.incrementAndGet();
+                if (oxygenReceiver < 1) {
+                    oxygenReceiver++;
                 }
-                else if (oxygenReceiver.get() == 1 && !releaseOxy.get()) {
-                    releaseOxy.set(true);
+                else if (oxygenReceiver == 1 && !releaseOxy) {
+                    releaseOxy = true;
                     releaseOxygen();
                 }
                 lock.unlock();
@@ -33,11 +32,11 @@ public class Main {
 
             executor2.execute(() -> {
                 lock.lock();
-                if (hydrogenReceiver.get() < 2) {
-                    hydrogenReceiver.incrementAndGet();
+                if (hydrogenReceiver < 2) {
+                    hydrogenReceiver++;
                 }
-                else if (hydrogenReceiver.get() == 2 && !releaseHydro.get()) {
-                    releaseHydro.set(true);
+                else if (hydrogenReceiver == 2 && !releaseHydro) {
+                    releaseHydro = true;
                     releaseHydrogen();
                 }
                 lock.unlock();
@@ -54,18 +53,18 @@ public class Main {
 
     public static void releaseOxygen(){
         pshhhh("O");
-
     }
 
     public static void pshhhh(String element) {
-        if (releaseOxy.get() && releaseHydro.get()) {
+        if (releaseOxy && releaseHydro) {
             string += element;
-            System.out.println(string + "\n");
+            counter++;
+            System.out.println("Release № " + counter + ": " + string + "\n");
             string = "";
-            hydrogenReceiver.set(0);
-            oxygenReceiver.set(0);
-            releaseOxy.set(false);
-            releaseHydro.set(false);
+            hydrogenReceiver = 0;
+            oxygenReceiver= 0;
+            releaseOxy = false;
+            releaseHydro = false;
         }
         else {
             string += element;
