@@ -1,12 +1,22 @@
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class Test2 {
-    private static final CyclicBarrier barrier = new CyclicBarrier(3);
+public class H2O {
+    private int i = 0;
+    private final Lock LOCK = new ReentrantLock();
+    private final CyclicBarrier BARRIER = new CyclicBarrier(3, () -> {
+        i ++;
+        System.out.println("\nВодичка пошла " + i + ": ");
+    });
+
     private long oxyCount;
     private long hydroCount;
 
-    public Test2(String inputString) {
+    public H2O(String inputString) {
         this.oxyCount = inputString.chars().
                 filter(s -> s == (int) 'O').
                 count();
@@ -20,12 +30,15 @@ public class Test2 {
             new Thread(() -> {
                 while (hydroCount > 0) {
                     try {
-                        barrier.await();
+                        BARRIER.await(100, TimeUnit.MILLISECONDS);
                         releaseHydrogen();
-                    } catch (InterruptedException | BrokenBarrierException e) {
-                        e.printStackTrace();
+                    } catch (InterruptedException | BrokenBarrierException | TimeoutException e) {
+                        System.out.println();
+                        break;
                     }
-                    hydroDecrement();
+                    LOCK.lock();
+                    hydroCount--;
+                    LOCK.unlock();
                 }
             }).start();
         }
@@ -33,29 +46,22 @@ public class Test2 {
         new Thread(() -> {
             while (oxyCount > 0) {
                 try {
-                    barrier.await();
+                    BARRIER.await(100, TimeUnit.MILLISECONDS);
                     releaseOxygen();
-                } catch (InterruptedException | BrokenBarrierException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException | BrokenBarrierException | TimeoutException e) {
+                    System.out.println();
+                    break;
                 }
-                oxyDecrement();
+                oxyCount--;
             }
         }).start();
     }
 
     private void releaseOxygen() {
-        System.out.println("O");
+        System.out.print("O");
     }
 
     private void releaseHydrogen() {
-        System.out.println("H");
-    }
-
-    public void oxyDecrement() {
-        oxyCount--;
-    }
-
-    public void hydroDecrement() {
-        hydroCount--;
+        System.out.print("H");
     }
 }
